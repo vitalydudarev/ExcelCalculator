@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace ExcelCalculator
+namespace SpreadsheetCalculator
 {
     public class WorkbookReader
     {
@@ -25,7 +25,7 @@ namespace ExcelCalculator
 //            var cells = new Dictionary<string, Cell>();
 //            var cellols = new List<ExcelReader.Cell>();
 
-            var worksheets = new List<ExcelCalculator.Worksheet>();
+            var worksheets = new List<SpreadsheetCalculator.Worksheet>();
             
             foreach (var worksheetInfo in workbookInfo.WorksheetInfos)
             {
@@ -37,41 +37,41 @@ namespace ExcelCalculator
                     var worksheetFileName = Path.Combine(fileName, "xl", rel.Target.Replace('/', '\\'));
                     var rows = ParseWorksheet(worksheetFileName);
                     
-                    var cecells = new List<ExcelCalculator.Cell>();
+                    var cecells = new List<SpreadsheetCalculator.Cell>();
 
                     foreach (var row in rows)
                     {
                         foreach (var cell in row.Cells)
                         {
-                            ExcelCalculator.CellFormula formula = null;
+                            SpreadsheetCalculator.CellFormula formula = null;
 
                             if (cell.HasFormula)
                             {
                                 var cellFormula = cell.CellFormula;
-                                formula = new ExcelCalculator.CellFormula(cellFormula.CalculateCell,
+                                formula = new SpreadsheetCalculator.CellFormula(cellFormula.CalculateCell,
                                     cellFormula.AlwaysCalculateArray, cellFormula.RangeOfCells,
                                     cellFormula.Formula, cellFormula.FormulaType);
                             }
 
-                            var cell1 = new ExcelCalculator.Cell(cell.Reference, cell.CellDataType, cell.CellValue,
+                            var cell1 = new SpreadsheetCalculator.Cell(cell.Reference, cell.CellDataType, cell.CellValue,
                                 formula, sharedStrings);
                             cecells.Add(cell1);
                         }
                     }
 
-                    var ws = new ExcelCalculator.Worksheet(sheet, cecells.ToArray());
+                    var ws = new SpreadsheetCalculator.Worksheet(sheet, cecells.ToArray());
                     worksheets.Add(ws);
                 }
             }
 
             var mapping = workbookInfo.WorksheetInfos.ToDictionary(a => a.SheetId, b => b.Name);
-            var calcCells = new List<ExcelCalculator.CalcChainCell>();
+            var calcCells = new List<SpreadsheetCalculator.CalcChainCell>();
             
             foreach (var calcChainCell in calcChainCells)
             {
                 var sheetName = mapping[calcChainCell.SheetId];
 
-                var calcCell = new ExcelCalculator.CalcChainCell(sheetName, calcChainCell.CellReference,
+                var calcCell = new SpreadsheetCalculator.CalcChainCell(sheetName, calcChainCell.CellReference,
                     calcChainCell.IsArrayFormula, calcChainCell.IsNewLevelDependency, calcChainCell.IsChildChain,
                     calcChainCell.IsNewThread);
                 calcCells.Add(calcCell);

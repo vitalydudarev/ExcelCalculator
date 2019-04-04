@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCalculator", "ExcelCalculator\ExcelCalculator.csproj", "{B4A283F8-5DD5-4507-902F-B5F79294EB39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadsheetCalculator", "SpreadsheetCalculator\SpreadsheetCalculator.csproj", "{B4A283F8-5DD5-4507-902F-B5F79294EB39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml;
 
-namespace ExcelCalculator
+namespace SpreadsheetCalculator
 {
     public class XmlParser
     {
