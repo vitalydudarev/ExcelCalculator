@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace SpreadsheetCalculator
 {
@@ -34,10 +35,19 @@ namespace SpreadsheetCalculator
         public string Name { get; }
         public Cell[] Cells { get; }
 
+        private readonly Dictionary<string, Cell> _cells;
+
         public Worksheet(string name, Cell[] cells)
         {
             Name = name;
             Cells = cells;
+
+            _cells = cells.ToDictionary(a => a.CellReference, b => b);
+        }
+
+        public Cell GetCell(string cellReference)
+        {
+            return _cells[cellReference];
         }
     }
 
@@ -66,10 +76,22 @@ namespace SpreadsheetCalculator
     {
     }
 
-    [DebuggerDisplay("{" + nameof(Reference) + "}")]
+    public class Reference
+    {
+        public string SheetName { get; }
+        public Range Range { get; }
+
+        public Reference(string sheetName, Range range)
+        {
+            SheetName = sheetName;
+            Range = range;
+        }
+    }
+
+    [DebuggerDisplay("{" + nameof(CellReference) + "}")]
     public class Cell : IReference
     {
-        public string Reference { get; }
+        public string CellReference { get; }
         public CellType CellType { get; }
         public string CellValue { get; set; }
         public CellFormula CellFormula { get; }
@@ -81,7 +103,7 @@ namespace SpreadsheetCalculator
         public Cell(string reference, CellType cellType, string cellValue, CellFormula cellFormula,
             string[] sharedStrings)
         {
-            Reference = reference;
+            CellReference = reference;
             CellType = cellType;
             CellValue = cellValue;
             CellFormula = cellFormula;
@@ -111,6 +133,29 @@ namespace SpreadsheetCalculator
     public class Range : IReference
     {
         public Cell[] Cells { get; set; }
+
+        public Range(Cell[] cells)
+        {
+            Cells = cells;
+        }
+    }
+
+    public class CellReference
+    {
+        public int Row { get; }
+        public string Column { get; }
+
+        private Regex _regex = new Regex($@"(?<{nameof(Row)}>[A-Z]+)(?<{nameof(Column)}>[0-9]+)", RegexOptions.Compiled);
+
+        public CellReference(string cellReference)
+        {
+            var match = _regex.Match(cellReference);
+            if (match.Success)
+            {
+                Row = int.Parse(match.Groups[nameof(Row)].Value);
+                Column = match.Groups[nameof(Column)].Value;
+            }
+        }
     }
 
     public interface IValue
@@ -139,6 +184,8 @@ namespace SpreadsheetCalculator
         private CalcChainCell[] _calcChainCells;
         private string[] _sharedString;
         private readonly Dictionary<string, string> _definedNames;
+        private readonly Dictionary<string, Worksheet> _sheets;
+        private Dictionary<string, int> _columns = GetWorksheetColumns();
 
 //        public Workbook(Worksheet[] worksheets, DefinedName[] definedNames)
 //        {
@@ -155,6 +202,7 @@ namespace SpreadsheetCalculator
             _calcChainCells = calcChainCells;
             _sharedString = sharedStrings;
             _definedNames = definedNames.Where(a => !a.Hidden).ToDictionary(a => a.Name, b => b.Reference);
+            _sheets = worksheets.ToDictionary(a => a.Name, b => b);
         }
 
         public void Calculate()
@@ -183,12 +231,64 @@ namespace SpreadsheetCalculator
                 }
             }
         }
-    }
 
-    public class Reference
-    {
-        public string SheetName { get; }
-        public string[] Cells { get; }
+        private Range GetRange(string sheetName, string from, string to = null)
+        {
+            if (to == null)
+            {
+                var cell = _sheets[sheetName].GetCell(from);
+                return new Range(new Cell[1] { cell });
+            }
+
+            var columns = GetRangeColumns(from, to);
+            var cells = new Cell[columns.Length];
+            //var sheets = _sheets[sheetName].GetCell("ddddd");
+
+            throw new Exception();
+        }
+
+        private string[] GetRangeColumns(string from, string to)
+        {
+            var fromIndex = _columns[from];
+            var toIndex = _columns[to];
+
+            int columnCount = toIndex - fromIndex + 1;
+            string[] columnNames = new string[columnCount];
+
+            for (int i = 0; i < columnCount; i++)
+                columnNames[i] = _columns.ElementAt(i).Key;
+
+            return columnNames;
+        }
+
+        private static Dictionary<string, int> GetWorksheetColumns()
+        {
+            var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            var result = new Dictionary<string, int>();
+
+            for (int i = 0; i < Math.Pow(2, 14); i++)
+            {
+                var column = GetString(i, alphabet);
+                result.Add(column, i);
+            }
+
+            return result;
+        }
+
+        private static string GetString(int index, string alphabet)
+        {
+            int alphabetLength = alphabet.Length;
+
+            int a = index % alphabetLength;
+            int b = index / alphabetLength;
+
+            string result = "";
+
+            if (b > 0)
+                result += GetString(b - 1, alphabet);
+
+            return result + alphabet[a];
+        }
     }
 
     public class XlValue
