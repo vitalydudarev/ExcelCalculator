@@ -140,12 +140,14 @@ namespace SpreadsheetCalculator
         }
     }
 
+    [DebuggerDisplay("{Column}{Row}")]
     public class CellReference
     {
         public int Row { get; }
         public string Column { get; }
 
-        private Regex _regex = new Regex($@"(?<{nameof(Row)}>[A-Z]+)(?<{nameof(Column)}>[0-9]+)", RegexOptions.Compiled);
+        private readonly Regex _regex =
+            new Regex($@"(?<{nameof(Column)}>[A-Z]+)(?<{nameof(Row)}>[0-9]+)", RegexOptions.Compiled);
 
         public CellReference(string cellReference)
         {
